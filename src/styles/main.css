@@ -2,14 +2,14 @@
 
 @theme {
   /* ── App palette ──────────────────────────────── */
-  --color-bg:      #080808;
-  --color-surface: #111111;
-  --color-s2:      #181818;
-  --color-border:  #222222;
-  --color-dim:     #252525;
-  --color-accent:  #d4f542;
-  --color-text:    #f0f0f0;
-  --color-muted:   #555555;
+  --color-bg:      #0a0704;
+  --color-surface: #130e09;
+  --color-s2:      #1c1510;
+  --color-border:  #2a1e12;
+  --color-dim:     #332416;
+  --color-accent:  #ff6b35;
+  --color-text:    #f5ede6;
+  --color-muted:   #6b4a35;
   --color-red:     #f06060;
   --color-green:   #4ade80;
   --color-blue:    #60a8f8;
@@ -19,22 +19,22 @@
   /* These let shadcn components (Button, Card, Input…) resolve their
      class names (bg-primary, text-card-foreground, etc.) without
      touching the palette above. */
-  --color-background:             #080808;
-  --color-foreground:             #f0f0f0;
-  --color-card:                   #111111;
-  --color-card-foreground:        #f0f0f0;
-  --color-popover:                #111111;
-  --color-popover-foreground:     #f0f0f0;
-  --color-primary:                #d4f542;
-  --color-primary-foreground:     #080808;
-  --color-secondary:              #1a1a1a;
-  --color-secondary-foreground:   #f0f0f0;
-  --color-muted-bg:               #1a1a1a;
-  --color-muted-foreground:       #555555;
+  --color-background:             #0a0704;
+  --color-foreground:             #f5ede6;
+  --color-card:                   #130e09;
+  --color-card-foreground:        #f5ede6;
+  --color-popover:                #130e09;
+  --color-popover-foreground:     #f5ede6;
+  --color-primary:                #ff6b35;
+  --color-primary-foreground:     #0a0704;
+  --color-secondary:              #1c1510;
+  --color-secondary-foreground:   #f5ede6;
+  --color-muted-bg:               #1c1510;
+  --color-muted-foreground:       #6b4a35;
   --color-destructive:            #f06060;
-  --color-destructive-foreground: #f0f0f0;
-  --color-input:                  #222222;
-  --color-ring:                   #d4f542;
+  --color-destructive-foreground: #f5ede6;
+  --color-input:                  #2a1e12;
+  --color-ring:                   #ff6b35;
 
   /* ── Fonts ────────────────────────────────────── */
   --font-sans: 'Syne', sans-serif;

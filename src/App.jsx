@@ -17,13 +17,23 @@ import LogTab from './tabs/LogTab';
 import HistoryTab from './tabs/HistoryTab';
 import LibraryTab from './tabs/LibraryTab';
 
-export default function App() {
-  const [sessions,  setSessions]  = useState([]);
-  const [gyms,      setGyms]      = useState(DEFAULT_GYMS);
-  const [exercises, setExercises] = useState(BUILTIN_EXERCISES);
-  const [gradeSystem, setGradeSystem] = useState("Font");
+const load = (key, fallback) => {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+};
 
-  const [activeId, setActiveId] = useState(null);
+export default function App() {
+  const [sessions,  setSessions]  = useState(() => load('chalk_sessions', []));
+  const [gyms,      setGyms]      = useState(() => load('chalk_gyms', DEFAULT_GYMS));
+  const [exercises, setExercises] = useState(() => load('chalk_exercises', BUILTIN_EXERCISES));
+  const [gradeSystem, setGradeSystem] = useState(() => load('chalk_gradeSystem', 'Font'));
+
+  const [activeId, setActiveId] = useState(() => load('chalk_activeId', null));
+
+  useEffect(() => { localStorage.setItem('chalk_sessions',    JSON.stringify(sessions));    }, [sessions]);
+  useEffect(() => { localStorage.setItem('chalk_gyms',        JSON.stringify(gyms));        }, [gyms]);
+  useEffect(() => { localStorage.setItem('chalk_exercises',   JSON.stringify(exercises));   }, [exercises]);
+  useEffect(() => { localStorage.setItem('chalk_gradeSystem', JSON.stringify(gradeSystem)); }, [gradeSystem]);
+  useEffect(() => { localStorage.setItem('chalk_activeId',    JSON.stringify(activeId));    }, [activeId]);
   const [tab,      setTab]      = useState("home");
   const [logTab,   setLogTab]   = useState("boulder");
 

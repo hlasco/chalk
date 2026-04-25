@@ -16,7 +16,8 @@
       "Bash(node -e \"import\\('recharts'\\).then\\(m => console.log\\(Object.keys\\(m\\).slice\\(0,20\\)\\)\\).catch\\(e => console.error\\(e.message\\)\\)\")",
       "Bash(npx shadcn@latest init -y)",
       "Bash(pkill -f \"shadcn\")",
-      "Bash(npx shadcn@latest add button card badge input sheet separator --yes)"
+      "Bash(npx shadcn@latest add button card badge input sheet separator --yes)",
+      "Bash(grep -E \"\\\\.\\(js|json|css\\)$|tailwind|index\")"
     ]
   }
 }

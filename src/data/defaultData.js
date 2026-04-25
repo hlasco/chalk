@@ -1,14 +1,13 @@
 export const DEFAULT_GYMS = [
-  { id:"gym_arch", name:"The Arch", ranges:[] },
-  { id:"gym_home", name:"Home Board", ranges:[] },
-  { id:"gym_bloc", name:"Bloc Shop",
+  { id:"gym_bloc", name:"Minimum",
     ranges:[
-      { name:"Yellow", color:"#f5e030", minGi:0,  maxGi:2  },
-      { name:"Green",  color:"#4ade80", minGi:3,  maxGi:4  },
-      { name:"Blue",   color:"#60a5fa", minGi:5,  maxGi:6  },
-      { name:"Red",    color:"#f87171", minGi:7,  maxGi:8  },
-      { name:"Purple", color:"#c084fc", minGi:9,  maxGi:10 },
-      { name:"Black",  color:"#e5e5e5", minGi:11, maxGi:14 },
+      { name:"Yellow", color:"#f5e030", minGi:0,  maxGi:3  },
+      { name:"Green",  color:"#4ade80", minGi:4,  maxGi:6  },
+      { name:"Orange", color:"#ff6a00", minGi:7,  maxGi:9  },
+      { name:"Blue",   color:"#3b82f6", minGi:10, maxGi:12 },
+      { name:"Red",    color:"#f87171", minGi:13, maxGi:15 },
+      { name:"White",  color:"#fcfcfc", minGi:16, maxGi:18 },
+      { name:"Black",  color:"#374151", minGi:19, maxGi:24 },
     ],
   },
 ];
