@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── App palette ──────────────────────────────── */
+  --color-bg:      #080808;
+  --color-surface: #111111;
+  --color-s2:      #181818;
+  --color-border:  #222222;
+  --color-dim:     #252525;
+  --color-accent:  #d4f542;
+  --color-text:    #f0f0f0;
+  --color-muted:   #555555;
+  --color-red:     #f06060;
+  --color-green:   #4ade80;
+  --color-blue:    #60a8f8;
+  --color-purple:  #a78bfa;
+
+  /* ── shadcn/ui compatibility aliases ─────────── */
+  /* These let shadcn components (Button, Card, Input…) resolve their
+     class names (bg-primary, text-card-foreground, etc.) without
+     touching the palette above. */
+  --color-background:             #080808;
+  --color-foreground:             #f0f0f0;
+  --color-card:                   #111111;
+  --color-card-foreground:        #f0f0f0;
+  --color-popover:                #111111;
+  --color-popover-foreground:     #f0f0f0;
+  --color-primary:                #d4f542;
+  --color-primary-foreground:     #080808;
+  --color-secondary:              #1a1a1a;
+  --color-secondary-foreground:   #f0f0f0;
+  --color-muted-bg:               #1a1a1a;
+  --color-muted-foreground:       #555555;
+  --color-destructive:            #f06060;
+  --color-destructive-foreground: #f0f0f0;
+  --color-input:                  #222222;
+  --color-ring:                   #d4f542;
+
+  /* ── Fonts ────────────────────────────────────── */
+  --font-sans: 'Syne', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  /* ── Radius (used by shadcn components) ─────── */
+  --radius: 0.625rem;
+}
+
+/* ── Global resets ──────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--color-bg); overscroll-behavior: none; }
+button { -webkit-appearance: none; appearance: none; cursor: pointer; }
+input, textarea, select { outline: none; }
+input[type=number] { -moz-appearance: textfield; }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: #252525; border-radius: 2px; }
+
+/* ── Animations ─────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.fade-up { animation: fadeUp 0.15s ease both; }
+
+/* shadcn Sheet / Dialog animations */
+@keyframes slideInFromBottom {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes slideOutToBottom {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}

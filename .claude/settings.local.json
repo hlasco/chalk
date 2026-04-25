@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"background:T.surface\\\\|border:\\\\`1px solid \\\\${T.border}\\\\`\" /Users/huguesl/code/the-coach/climbing-logger-v10.2.jsx)",
+      "Bash(npm install *)",
+      "Bash(npx vite *)",
+      "Bash(awk 'NR==38,NR==545{next} {print}' /Users/huguesl/code/the-coach/src/App.jsx)",
+      "Bash(mv /tmp/app_tmp.jsx /Users/huguesl/code/the-coach/src/App.jsx)",
+      "Bash(awk 'NR==38,NR==443{next} {print}' /Users/huguesl/code/the-coach/src/App.jsx)",
+      "Bash(awk 'NR<46 || NR>452' src/App.jsx)",
+      "Bash(mv /tmp/app_step7.jsx src/App.jsx)",
+      "Bash(awk 'NR<292 || NR>720' src/App.jsx)",
+      "Bash(mv /tmp/app_tabs.jsx src/App.jsx)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(node -e \"import\\('recharts'\\).then\\(m => console.log\\(Object.keys\\(m\\).slice\\(0,20\\)\\)\\).catch\\(e => console.error\\(e.message\\)\\)\")",
+      "Bash(npx shadcn@latest init -y)",
+      "Bash(pkill -f \"shadcn\")",
+      "Bash(npx shadcn@latest add button card badge input sheet separator --yes)"
+    ]
+  }
+}
