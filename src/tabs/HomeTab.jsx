@@ -11,6 +11,8 @@ import DashboardGrid from '../widgets/DashboardGrid';
 
 export default function HomeTab({ sessions, exercises, gyms, gradeSystem, grades }) {
   const [filterOpen, setFilterOpen] = useState(false);
+  const [period, setPeriod] = useState('all');
+  const [agg,    setAgg]    = useState('session');
   const { fStyles, setFStyles, fResult, setFResult, fMinGi, setFMinGi, fMaxGi, setFMaxGi,
           fGymIds, setFGymIds, fDateFrom, setFDateFrom, fDateTo, setFDateTo,
           filterActive, clearFilters } = useFilters();
@@ -20,7 +22,7 @@ export default function HomeTab({ sessions, exercises, gyms, gradeSystem, grades
   const { widgets, addWidget, removeWidget, moveUp, moveDown, resetDashboard } = useDashboard();
 
   // Context passed to every widget
-  const ctx = { stats, sessions: filteredSessions, allSessions: sessions, exercises, gyms, grades, gradeSystem };
+  const ctx = { stats, sessions: filteredSessions, allSessions: sessions, exercises, gyms, grades, gradeSystem, period, setPeriod, agg, setAgg };
 
   return (
     <div className="flex-1 overflow-y-auto p-5">
@@ -76,6 +78,28 @@ export default function HomeTab({ sessions, exercises, gyms, gradeSystem, grades
           )}
         </div>
       )}
+
+      {/* Shared chart controls */}
+      <div className="flex justify-between items-center mb-3">
+        <div className="flex rounded-[6px] overflow-hidden border border-border">
+          {[{id:'1M',days:30},{id:'3M',days:90},{id:'6M',days:180},{id:'1Y',days:365},{id:'all'}].map(p => (
+            <button key={p.id} onClick={() => setPeriod(p.id)} style={{
+              padding:'3px 8px', fontFamily:'var(--font-mono)', fontSize:9, cursor:'pointer', border:'none',
+              background: period===p.id ? 'var(--color-accent)' : 'transparent',
+              color:      period===p.id ? 'var(--color-bg)'     : 'var(--color-muted)',
+            }}>{p.id==='all' ? 'All' : p.id}</button>
+          ))}
+        </div>
+        <div className="flex rounded-[6px] overflow-hidden border border-border">
+          {[{id:'session',label:'Sess.'},{id:'weekly',label:'Wk'},{id:'monthly',label:'Mo'}].map(a => (
+            <button key={a.id} onClick={() => setAgg(a.id)} style={{
+              padding:'3px 8px', fontFamily:'var(--font-mono)', fontSize:9, cursor:'pointer', border:'none',
+              background: agg===a.id ? 'var(--color-accent)' : 'transparent',
+              color:      agg===a.id ? 'var(--color-bg)'     : 'var(--color-muted)',
+            }}>{a.label}</button>
+          ))}
+        </div>
+      </div>
 
       <DashboardGrid
         widgets={widgets}

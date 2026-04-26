@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── App palette ──────────────────────────────── */
+  /* ── Ember palette (default — overridden at runtime) ─────────── */
   --color-bg:      #0a0704;
   --color-surface: #130e09;
   --color-s2:      #1c1510;
@@ -16,9 +16,6 @@
   --color-purple:  #a78bfa;
 
   /* ── shadcn/ui compatibility aliases ─────────── */
-  /* These let shadcn components (Button, Card, Input…) resolve their
-     class names (bg-primary, text-card-foreground, etc.) without
-     touching the palette above. */
   --color-background:             #0a0704;
   --color-foreground:             #f5ede6;
   --color-card:                   #130e09;
@@ -46,7 +43,8 @@
 
 /* ── Global resets ──────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--color-bg); overscroll-behavior: none; }
+html { background: #000; }
+body { background: #000; overscroll-behavior: none; transition: background 0.25s; }
 button { -webkit-appearance: none; appearance: none; cursor: pointer; }
 input, textarea, select { outline: none; }
 input[type=number] { -moz-appearance: textfield; }
@@ -54,6 +52,7 @@ input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-thumb { background: #252525; border-radius: 2px; }
+svg, canvas { -webkit-tap-highlight-color: transparent; user-select: none; }
 
 /* ── Animations ─────────────────────────────────── */
 @keyframes fadeUp {

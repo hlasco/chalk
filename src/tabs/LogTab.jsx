@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { clsx } from 'clsx';
 import { gradeColor, V_GRADES, FONT_GRADES, V_TO_FONT, FONT_TO_V } from '../utils/gradeUtils';
 import { fmtDuration } from '../utils/formatters';
@@ -10,6 +11,10 @@ import GradeSelector from '../components/pickers/GradeSelector';
 import StyleSelector from '../components/pickers/StyleSelector';
 import SendFellToggle from '../components/pickers/SendFellToggle';
 import TrainingForm from '../components/forms/TrainingForm';
+import ProjectLogModal from '../components/projects/ProjectLogModal';
+import { uid } from '../utils/uid';
+
+const isActiveProject = p => !p.history.some(h => h.result === 'sent' || h.result === 'flashed');
 
 export default function LogTab({
   activeId, sessions, active, activeGym, gradeSystem, grades, elapsedMin, exercises, setExercises,
@@ -20,10 +25,16 @@ export default function LogTab({
   useColors, setUseColors, gymHasRanges,
   logBoulder, logTraining, deleteLiveBoulder, deleteLiveTraining,
   setShowNew, setTab, setShowEnd,
+  projects, onAddProject, onLogProject, onDeleteProject,
 }) {
   const otherGrades = gradeSystem === 'V-Scale' ? FONT_GRADES : V_GRADES;
   const convIdx = gradeSystem === 'V-Scale' ? V_TO_FONT[selGi] : FONT_TO_V[selGi];
   const convGrade = convIdx != null ? otherGrades[convIdx] : null;
+  const [loggingProject, setLoggingProject] = useState(null);
+  const [addingProject, setAddingProject]   = useState(false);
+  const [newProjName, setNewProjName]       = useState('');
+  const [newProjGi, setNewProjGi]           = useState(8);
+
   const GradeGrid = () => (
     <GradeSelector
       gi={selGi} setGi={setSelGi} grades={grades} gym={activeGym}
@@ -82,9 +93,9 @@ export default function LogTab({
 
           {/* ── Tab toggle ── */}
           <div className="flex gap-2 mb-6">
-            {[['boulder','BOULDER'],['onwall','ON WALL'],['training','TRAINING']].map(([lt, lbl]) => (
+            {[['boulder','BOULDER'],['training','TRAINING']].map(([lt, lbl]) => (
               <button key={lt} onClick={() => setLogTab(lt)}
-                className={clsx(pill(logTab === lt), 'flex-1 text-center py-3 text-[11px]')}>
+                className={clsx(pill(logTab === lt || (lt === 'training' && logTab === 'onwall')), 'flex-1 text-center py-3 text-[11px]')}>
                 {lbl}
               </button>
             ))}
@@ -172,30 +183,118 @@ export default function LogTab({
                 LOG {selResult === 'send' ? 'SEND' : 'PROJ'} — {grades[selGi]}
               </Button>
 
+              {/* Projects section */}
+              {(() => {
+                const allProjects    = (projects || []).slice().sort((a,b) => {
+                  const aA = isActiveProject(a), bA = isActiveProject(b);
+                  if (aA !== bA) return aA ? -1 : 1;
+                  const aL = a.history.at(-1)?.date ?? a.createdAt;
+                  const bL = b.history.at(-1)?.date ?? b.createdAt;
+                  return bL.localeCompare(aL);
+                });
+                const activeProjects  = allProjects.filter(isActiveProject);
+                const doneProjects    = allProjects.filter(p => !isActiveProject(p));
+                const createProject = () => {
+                  if (!newProjName.trim()) return;
+                  onAddProject({ id:`proj_${uid()}`, name:newProjName.trim(), gi:newProjGi, gymId:activeGym?.id??null, createdAt:active.date, history:[] });
+                  setNewProjName(''); setNewProjGi(8); setAddingProject(false);
+                };
+                return (
+                  <div>
+                    <div className="flex justify-between items-center mb-3 mt-2">
+                      <Lbl style={{ marginBottom: 0 }}>PROJECTS</Lbl>
+                      <button onClick={() => setAddingProject(p => !p)}
+                        className="font-mono text-[10px] cursor-pointer bg-transparent border-none"
+                        style={{ color: addingProject ? 'var(--color-muted)' : 'var(--color-accent)' }}>
+                        {addingProject ? 'Cancel' : '+ New'}
+                      </button>
+                    </div>
+
+                    {addingProject && (
+                      <div className="mb-4 p-3 rounded-[12px] bg-s2 border border-border flex flex-col gap-3">
+                        <input autoFocus value={newProjName} onChange={e => setNewProjName(e.target.value)}
+                          onKeyDown={e => { if (e.key==='Enter') createProject(); if (e.key==='Escape') setAddingProject(false); }}
+                          placeholder="Project name…" style={{ outline:'none' }}
+                          className="w-full bg-surface border border-border rounded-[8px] px-3 py-2 font-sans text-[13px] text-text placeholder:text-muted" />
+                        <GradeSelector gi={newProjGi} setGi={setNewProjGi} grades={grades} gym={activeGym} mode="grid" />
+                        <button onClick={createProject}
+                          className="w-full py-2.5 rounded-[10px] bg-accent text-bg font-sans font-bold text-[13px] cursor-pointer border-none">
+                          Add Project
+                        </button>
+                      </div>
+                    )}
+
+                    {activeProjects.length === 0 && !addingProject && (
+                      <div className="py-3 font-mono text-[11px] text-dim text-center">No active projects</div>
+                    )}
+
+                    {[
+                      ...activeProjects.map(p => ({ p, done: false })),
+                      ...doneProjects.map(p => ({ p, done: true })),
+                    ].map(({ p, done }) => {
+                      const sessLog  = p.history.find(h => h.sessionId === active.id);
+                      const total    = p.history.reduce((a, h) => a + (h.attempts||0), 0);
+                      const col      = gradeColor(p.gi, null);
+                      const lastResult = [...p.history].reverse().find(h => h.result === 'sent' || h.result === 'flashed')?.result;
+                      return (
+                        <div key={p.id}
+                          className="flex items-center gap-3 py-3 border-b border-border last:border-b-0 cursor-pointer"
+                          style={{ opacity: done ? 0.55 : 1 }}
+                          onClick={() => !done && setLoggingProject(p)}>
+                          <div className="flex-shrink-0 px-2 py-1 rounded-[6px] font-mono text-[10px] font-bold"
+                            style={{ border:`1px solid ${col}`, color:col, background:`${col}18` }}>
+                            {grades[p.gi]??`#${p.gi}`}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-sans text-[13px] truncate" style={{ color: done ? 'var(--color-muted)' : 'var(--color-text)' }}>{p.name}</div>
+                            <div className="font-mono text-[10px] text-muted">{total} att · {p.history.length} sess</div>
+                          </div>
+                          <span className="font-mono text-[10px] flex-shrink-0" style={{
+                            color: done
+                              ? (lastResult === 'flashed' ? 'var(--color-accent)' : 'var(--color-green)')
+                              : sessLog
+                                ? (sessLog.result === 'working' ? 'var(--color-blue)' : 'var(--color-green)')
+                                : 'var(--color-muted)',
+                          }}>
+                            {done
+                              ? (lastResult === 'flashed' ? '⚡ flashed' : '✓ sent')
+                              : sessLog
+                                ? (sessLog.result === 'working' ? 'working' : '✓ done')
+                                : 'log →'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
               {/* Session log */}
-              {active.boulders.length > 0 && (
-                <div>
+              {active.boulders.filter(b => b.source !== 'training' && b.source !== 'project').length > 0 && (
+                <div className="mt-2">
                   <Lbl>THIS SESSION</Lbl>
-                  {[...active.boulders].reverse().map(b => (
+                  {[...active.boulders].reverse().filter(b => b.source !== 'training' && b.source !== 'project').map(b => (
                     <BoulderRow key={b.id} boulder={b} gym={activeGym} grades={grades}
                       onDelete={() => deleteLiveBoulder(b.id)} />
                   ))}
                 </div>
               )}
-            </div>
-          )}
 
-          {/* ── On Wall tab ── */}
-          {logTab === 'onwall' && (
-            <div className="fade-up">
-              <TrainingForm exercises={exercises} onLog={logTraining} gradeSystem={gradeSystem}
-                sessions={sessions} activeGym={activeGym} setExercises={setExercises}
-                onLogBoulders={onLogBoulders} lockedCategory="On-the-wall" />
+              {/* Project log modal */}
+              {loggingProject && (
+                <ProjectLogModal
+                  project={loggingProject}
+                  grades={grades}
+                  sessionLog={loggingProject.history.find(h => h.sessionId === active?.id)}
+                  onLog={({ attempts, result }) => onLogProject({ projectId:loggingProject.id, sessionId:active.id, date:active.date, attempts, result })}
+                  onClose={() => setLoggingProject(null)}
+                />
+              )}
             </div>
           )}
 
           {/* ── Training tab ── */}
-          {logTab === 'training' && (
+          {(logTab === 'training' || logTab === 'onwall') && (
             <div className="fade-up">
               <TrainingForm exercises={exercises} onLog={logTraining} gradeSystem={gradeSystem}
                 sessions={sessions} activeGym={activeGym} setExercises={setExercises}

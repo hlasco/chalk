@@ -9,6 +9,7 @@ import { inp, pill } from '../../styles/shared';
 import Lbl from '../ui/Lbl';
 import Empty from '../ui/Empty';
 import SetTimer from '../timer/SetTimer';
+import SetLogPanel from '../timer/SetLogPanel';
 
 export default function TrainingForm({
   exercises, onLog, gradeSystem, sessions, activeGym,
@@ -28,7 +29,6 @@ export default function TrainingForm({
 
   const ex = exercises.find(e => e.id === exId);
 
-  // Sync category when lockedCategory changes (e.g. tab switch)
   useEffect(() => {
     if (lockedCategory) setCategory(lockedCategory);
   }, [lockedCategory]);
@@ -39,12 +39,17 @@ export default function TrainingForm({
       id = visibleExs[0]?.id;
       setExId(id);
     }
+    const currentEx = exercises.find(e => e.id === id);
     let lastValues = null, lastDate = null;
     for (const s of (sessions || []).filter(x => x.ended).sort((a, b) => b.date.localeCompare(a.date))) {
       const t = [...s.training].reverse().find(t => t.exId === id);
       if (t) { lastValues = t.values; lastDate = s.date; break; }
     }
-    setValues(lastValues ? {...lastValues} : {});
+    // Fall back to field-level defaults when no history
+    const fieldDefaults = currentEx
+      ? Object.fromEntries(currentEx.fields.filter(f => f.default != null).map(f => [f.key, f.default]))
+      : {};
+    setValues(lastValues ? {...lastValues} : fieldDefaults);
     setPrefillDate(lastDate);
     setNote("");
   }, [exId, category]); // eslint-disable-line
@@ -61,24 +66,21 @@ export default function TrainingForm({
     const validSetLogs = Array.isArray(setLogs) && setLogs.length > 0 ? setLogs : null;
     onLog({ id: uid(), exId, values: cleaned, note, setLogs: validSetLogs });
 
-    // Auto-log climbs as boulder sends for on-the-wall exercises
     if (onLogBoulders) {
       const gradeField = ex.fields.find(f => f.unit === 'idx');
       if (gradeField) {
         let boulders = [];
         if (validSetLogs) {
-          // From timer: use actual grade + send/fell data per climb
           boulders = validSetLogs.flatMap(sl =>
             (sl.climbs || []).map(c => makeBoulder({
-              gi: c.gi, styles: c.styles || [], sent: c.sent, attempts: 1, source: 'training',
+              gi: c.gi, styles: c.styles || [], sent: c.sent, attempts: c.attempts ?? 1, source: 'training',
             }))
           );
         } else {
-          // From LOG button: default all to sends at the target grade
           const gi = +(values[gradeField.key] ?? cleaned[gradeField.key]);
           if (!isNaN(gi)) {
-            const setsCount   = Math.max(1, +(values.sets   || cleaned.sets   || 1));
-            const perSet      = Math.max(1, +(values.climbs || values.problems || cleaned.climbs || cleaned.problems || 1));
+            const setsCount = Math.max(1, +(values.sets   || cleaned.sets   || 1));
+            const perSet    = Math.max(1, +(values.climbs || values.problems || cleaned.climbs || cleaned.problems || 1));
             boulders = Array.from({ length: setsCount * perSet }, () =>
               makeBoulder({ gi, styles: [], sent: true, attempts: 1, source: 'training' })
             );
@@ -120,6 +122,46 @@ export default function TrainingForm({
   const timerMode = !ex?.timerCfg ? (isBuiltinEx ? 'default' : 'off') : ex.timerCfg.type;
   const secFields = ex?.fields.filter(f => f.unit === 's' || f.unit === 'min') ?? [];
 
+  // Per-climb detail logging
+  const gradeField    = ex?.fields.find(f => f.unit === 'idx') ?? null;
+  const canDetails    = !!gradeField;
+  const showAttempts  = ex?.detailMode === 'attempts';
+  const detailSCount  = Math.max(1, +(values.sets || 1));
+  const detailCPSet   = Math.max(1, +(values.climbs || values.problems || 1));
+  const detailTGi     = gradeField ? (+(values[gradeField.key] ?? '') || 0) : 0;
+
+  const [detailStep, setDetailStep] = useState(null);
+
+  const startDetailLog = () =>
+    setDetailStep({ current: 1, total: detailSCount, logs: {} });
+
+  const saveDetailSet = (climbs) => {
+    const { current, total, logs } = detailStep;
+    const newLogs = { ...logs, [current]: { climbs } };
+    if (current >= total) {
+      const arr = Object.entries(newLogs)
+        .sort(([a], [b]) => +a - +b)
+        .map(([n, { climbs: c }]) => ({ set: +n, climbs: c }));
+      handle(arr);
+      setDetailStep(null);
+    } else {
+      setDetailStep({ current: current + 1, total, logs: newLogs });
+    }
+  };
+
+  const skipDetailSet = () => {
+    const { current, total, logs } = detailStep;
+    if (current >= total) {
+      const arr = Object.entries(logs)
+        .sort(([a], [b]) => +a - +b)
+        .map(([n, { climbs: c }]) => ({ set: +n, climbs: c }));
+      handle(arr.length ? arr : null);
+      setDetailStep(null);
+    } else {
+      setDetailStep(p => ({ ...p, current: p.current + 1 }));
+    }
+  };
+
   return (
     <>
       {showTimer && timerConfig && (
@@ -132,11 +174,35 @@ export default function TrainingForm({
         />
       )}
 
+      {detailStep && gradeField && (
+        <div className="fixed inset-0 z-[500] flex flex-col bg-[#030303]">
+          <div className="flex items-center justify-between px-5 pt-6 pb-3">
+            <div className="font-mono text-[10px] text-muted tracking-[3px]">
+              {detailStep.total > 1 ? `SET ${detailStep.current} / ${detailStep.total}` : ex?.name?.toUpperCase()}
+            </div>
+            <button onClick={() => setDetailStep(null)}
+              className="bg-transparent border-none text-muted font-mono text-[18px] cursor-pointer leading-none">✕</button>
+          </div>
+          <SetLogPanel
+            n={detailCPSet}
+            targetGi={detailTGi}
+            grades={grades}
+            gym={activeGym}
+            label={showAttempts ? "PROBLEM" : "CLIMB"}
+            showAttempts={showAttempts}
+            existing={detailStep.logs[detailStep.current]?.climbs}
+            onSave={saveDetailSet}
+            onSkip={skipDetailSet}
+            fullScreen
+          />
+        </div>
+      )}
+
       {/* Category selector — hidden when locked */}
       {!lockedCategory && (
         <>
           <Lbl>CATEGORY</Lbl>
-          <div className="flex flex-wrap gap-2 mb-5">
+          <div className="flex flex-wrap gap-2 mb-6">
             {cats.map(c => (
               <button key={c} onClick={() => setCategory(c)} className={pill(category === c)}>{c}</button>
             ))}
@@ -145,7 +211,7 @@ export default function TrainingForm({
       )}
 
       <Lbl>EXERCISE</Lbl>
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-7">
         {visibleExs.map(e => (
           <button key={e.id} onClick={() => setExId(e.id)} className={pill(exId === e.id)}>{e.name}</button>
         ))}
@@ -155,12 +221,12 @@ export default function TrainingForm({
       {ex && (
         <>
           {prefillDate && (
-            <div className="font-mono text-[9px] text-muted tracking-[1px] mb-3">
+            <div className="font-mono text-[9px] text-muted tracking-[1px] mb-4">
               PREFILLED FROM {prefillDate} — tap any field to edit
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3 mb-5">
+          <div className="grid grid-cols-2 gap-4 mb-6">
             {ex.fields.map(f => (
               <div key={f.key}>
                 <Lbl>{f.label.toUpperCase()}{f.unit && f.unit !== "idx" ? ` (${f.unit})` : ""}</Lbl>
@@ -188,7 +254,7 @@ export default function TrainingForm({
 
           {/* Inline timer config */}
           {setExercises && (
-            <div className="mb-5">
+            <div className="mb-6">
               <Lbl>TIMER</Lbl>
               <div className="flex gap-[5px] flex-wrap">
                 {[
@@ -238,17 +304,17 @@ export default function TrainingForm({
           )}
 
           <Lbl>NOTE</Lbl>
-          <input value={note} onChange={e => setNote(e.target.value)} className={clsx(inp, "mb-5")} placeholder="Optional…"/>
+          <input value={note} onChange={e => setNote(e.target.value)} className={clsx(inp, "mb-6")} placeholder="Optional…"/>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2.5">
             {canTimer && timerConfig && (
               <button onClick={() => setShowTimer(true)}
-                className="flex-none px-[18px] py-[14px] rounded-[10px] border-none bg-green text-bg font-mono text-[13px] font-medium tracking-[1px]">
+                className="flex-none px-5 py-[16px] rounded-[12px] border-none bg-green text-bg font-mono text-[14px] font-medium tracking-[1px]">
                 ▶ Timer
               </button>
             )}
-            <button onClick={() => handle()}
-              className="flex-1 py-[14px] rounded-[10px] border-none bg-accent text-bg font-sans text-[14px] font-extrabold">
+            <button onClick={canDetails ? startDetailLog : () => handle()}
+              className="flex-1 py-[16px] rounded-[12px] border-none bg-accent text-bg font-sans text-[15px] font-extrabold tracking-[0.5px]">
               LOG — {ex.name}
             </button>
           </div>

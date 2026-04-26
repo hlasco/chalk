@@ -14,7 +14,11 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
   const [disp, setDisp]       = useState({...r.current});
   const [setLogs, setSetLogs] = useState({});
   const [showLogPanel, setShowLogPanel] = useState(false);
+  const logPanelRef = useRef(false);
   const advanceRef = useRef(null);
+
+  const openLogPanel  = () => { logPanelRef.current = true;  setShowLogPanel(true);  };
+  const closeLogPanel = () => { logPanelRef.current = false; setShowLogPanel(false); };
 
   useEffect(() => {
     makeBeep(660, 0.1);
@@ -24,7 +28,7 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
       if (s.phase === "prep") {
         r.current = {...s, phase:"work", left:workSec??0, elapsed:0};
         makeBeep(1047, 0.12);
-        setShowLogPanel(false);
+        closeLogPanel();
       } else if (s.phase === "work") {
         const lastRep = s.rep >= repsPerSet, lastSet = s.set >= sets;
         if (!lastRep) {
@@ -35,7 +39,7 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
             r.current = {...s, phase:"work", rep:s.rep+1, left:workSec??0, elapsed:0};
             makeBeep(880, 0.06, 0.2);
           }
-          setShowLogPanel(false);
+          closeLogPanel();
         } else if (!lastSet) {
           if (setRestSec > 0) {
             r.current = {...s, phase:"setRest", set:s.set+1, rep:1, left:setRestSec, elapsed:0};
@@ -44,20 +48,20 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
             r.current = {...s, phase:"work", set:s.set+1, rep:1, left:workSec??0, elapsed:0};
             makeBeep(1047, 0.12);
           }
-          if (logPerSet) setShowLogPanel(true);
+          if (logPerSet) openLogPanel();
         } else {
           r.current = {...s, phase:"done", elapsed:0};
           makeBeep(660,0.12); setTimeout(()=>makeBeep(880,0.12),180); setTimeout(()=>makeBeep(1100,0.2),360);
-          if (logPerSet) setShowLogPanel(true);
+          if (logPerSet) openLogPanel();
         }
       } else if (s.phase === "shortRest") {
         r.current = {...s, phase:"work", rep:s.rep+1, left:workSec??0, elapsed:0};
         makeBeep(1047, 0.12);
-        setShowLogPanel(false);
+        closeLogPanel();
       } else if (s.phase === "setRest") {
         r.current = {...s, phase:"work", left:workSec??0, elapsed:0};
         makeBeep(1047, 0.12);
-        setShowLogPanel(false);
+        closeLogPanel();
       }
       setDisp({...r.current});
     };
@@ -66,7 +70,7 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
 
     const id = setInterval(() => {
       const s = r.current;
-      if (s.paused || s.phase==="done") return;
+      if (s.paused || s.phase==="done" || logPanelRef.current) return;
       if (s.phase==="work" && workSec===null) {
         r.current = {...s, elapsed:+(s.elapsed+0.1).toFixed(1)};
         setDisp({...r.current});
@@ -90,7 +94,7 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
 
   const saveSetLog = (climbs) => {
     setSetLogs(p => ({...p, [completedSet]: {climbs}}));
-    setShowLogPanel(false);
+    closeLogPanel();
   };
 
   const phaseColor = {
@@ -143,7 +147,7 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
           label="CLIMB"
           existing={setLogs[completedSet]?.climbs}
           onSave={saveSetLog}
-          onSkip={()=>setShowLogPanel(false)}
+          onSkip={closeLogPanel}
           fullScreen
         />
       )}
@@ -215,7 +219,7 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
                   </button>
                 )}
                 {logPerSet && (phase==="setRest"||phase==="done") && (
-                  <button onClick={()=>setShowLogPanel(true)} style={{
+                  <button onClick={openLogPanel} style={{
                     padding:"7px 22px",borderRadius:20,
                     border:"1px solid var(--color-accent)",background:"color-mix(in srgb,var(--color-accent) 8%,transparent)",
                     color:"var(--color-accent)",fontFamily:"var(--font-mono)",fontSize:10,letterSpacing:1,

@@ -1,16 +1,13 @@
 import { SESSION_GOALS } from '../../constants';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import Lbl from '../ui/Lbl';
 
 export default function NewSessionModal({
   gyms, newGymId, setNewGymId,
   newGoal, setNewGoal,
-  addingGym, setAddingGym,
-  gymName, setGymName,
-  onQuickAddGym, onStart, onCancel,
+  onNewGym, onStart, onCancel,
 }) {
   return (
     <Sheet open onOpenChange={open => !open && onCancel()}>
@@ -57,23 +54,10 @@ export default function NewSessionModal({
           ))}
         </div>
 
-        {addingGym ? (
-          <div className="flex gap-2 mb-5">
-            <Input
-              autoFocus value={gymName} onChange={e => setGymName(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') onQuickAddGym(); if (e.key === 'Escape') setAddingGym(false); }}
-              placeholder="New gym name…"
-              className="flex-1 bg-s2 border-border text-text placeholder:text-muted focus-visible:ring-accent"
-            />
-            <Button onClick={onQuickAddGym} size="sm" className="bg-accent text-bg hover:bg-accent/90">Add</Button>
-            <Button onClick={() => setAddingGym(false)} variant="outline" size="sm" className="border-border text-muted">✕</Button>
-          </div>
-        ) : (
-          <button onClick={() => setAddingGym(true)}
-            className="w-full py-3 rounded-[10px] border border-dashed border-border bg-transparent text-muted font-mono text-[11px] cursor-pointer mb-5 hover:border-muted transition-colors">
-            + New gym
-          </button>
-        )}
+        <button onClick={onNewGym}
+          className="w-full py-3 rounded-[10px] border border-dashed border-border bg-transparent text-muted font-mono text-[11px] cursor-pointer mb-5 hover:border-muted transition-colors">
+          + New gym
+        </button>
 
         <div className="flex gap-3 mt-2">
           <Button onClick={onCancel} variant="outline" className="flex-1 border-border text-muted font-mono">

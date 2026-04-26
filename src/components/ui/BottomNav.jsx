@@ -11,7 +11,7 @@ const TABS = [
 
 export default function BottomNav({ tab, setTab, hasActive, elapsedMin }) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-bg/95 backdrop-blur border-t border-border z-10">
+    <div className="fixed bottom-0 left-3 right-3 sm:left-auto sm:right-auto max-w-[430px] sm:mx-auto bg-bg/95 backdrop-blur border-t border-border z-10">
       <div className="flex">
         {TABS.map(({ id, label, Icon }) => {
           const active = tab === id;

@@ -4,6 +4,7 @@ import { makeBoulder } from './utils/boulderFactory';
 import { gradesFor } from './utils/gradeUtils';
 import { EXERCISE_CATEGORIES } from './constants';
 import { DEFAULT_GYMS, BUILTIN_EXERCISES } from './data/defaultData';
+import { applyTheme } from './data/themes';
 import { useElapsedMinutes } from './hooks/useElapsedMinutes';
 import BottomNav from './components/ui/BottomNav';
 import ExerciseEditor from './components/forms/ExerciseEditor';
@@ -28,12 +29,19 @@ export default function App() {
   const [gradeSystem, setGradeSystem] = useState(() => load('chalk_gradeSystem', 'Font'));
 
   const [activeId, setActiveId] = useState(() => load('chalk_activeId', null));
+  const [projects, setProjects] = useState(() => load('chalk_projects', []));
+  const [themeKey,     setThemeKey]     = useState(() => load('chalk_themeKey', 'ember'));
+  const [customColors, setCustomColors] = useState(() => load('chalk_customColors', {}));
 
-  useEffect(() => { localStorage.setItem('chalk_sessions',    JSON.stringify(sessions));    }, [sessions]);
-  useEffect(() => { localStorage.setItem('chalk_gyms',        JSON.stringify(gyms));        }, [gyms]);
-  useEffect(() => { localStorage.setItem('chalk_exercises',   JSON.stringify(exercises));   }, [exercises]);
-  useEffect(() => { localStorage.setItem('chalk_gradeSystem', JSON.stringify(gradeSystem)); }, [gradeSystem]);
-  useEffect(() => { localStorage.setItem('chalk_activeId',    JSON.stringify(activeId));    }, [activeId]);
+  useEffect(() => { localStorage.setItem('chalk_sessions',     JSON.stringify(sessions));     }, [sessions]);
+  useEffect(() => { localStorage.setItem('chalk_gyms',         JSON.stringify(gyms));         }, [gyms]);
+  useEffect(() => { localStorage.setItem('chalk_exercises',    JSON.stringify(exercises));    }, [exercises]);
+  useEffect(() => { localStorage.setItem('chalk_gradeSystem',  JSON.stringify(gradeSystem));  }, [gradeSystem]);
+  useEffect(() => { localStorage.setItem('chalk_activeId',     JSON.stringify(activeId));     }, [activeId]);
+  useEffect(() => { localStorage.setItem('chalk_projects',     JSON.stringify(projects));     }, [projects]);
+  useEffect(() => { localStorage.setItem('chalk_themeKey',     JSON.stringify(themeKey));     }, [themeKey]);
+  useEffect(() => { localStorage.setItem('chalk_customColors', JSON.stringify(customColors)); }, [customColors]);
+  useEffect(() => { applyTheme(themeKey, customColors); }, [themeKey, customColors]);
   const [tab,      setTab]      = useState("home");
   const [logTab,   setLogTab]   = useState("boulder");
 
@@ -41,8 +49,6 @@ export default function App() {
 
   const [showNew,     setShowNew]   = useState(false);
   const [newGymId,    setNewGymId]  = useState(gyms[0]?.id ?? null);
-  const [addingGym,   setAddingGym]= useState(false);
-  const [gymName,     setGymName]  = useState("");
   const [showEnd,     setShowEnd]   = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [editingGym,   setEditingGym] = useState(null);
@@ -68,17 +74,7 @@ export default function App() {
     setSessions(p=>[s,...p]);
     setActiveId(s.id);
     setShowNew(false);
-    setAddingGym(false);
     setTab("log");
-  };
-
-  const quickAddGym = () => {
-    if (!gymName.trim()) return;
-    const g = {id:`gym_${uid()}`,name:gymName.trim(),ranges:[]};
-    setGyms(p=>[...p,g]);
-    setNewGymId(g.id);
-    setGymName("");
-    setAddingGym(false);
   };
 
   const endSession = () => {
@@ -136,7 +132,9 @@ export default function App() {
   };
 
   const saveGym = updated => {
+    const isNew = !gyms.some(g => g.id === updated.id);
     setGyms(p=>p.some(g=>g.id===updated.id)?p.map(g=>g.id===updated.id?updated:g):[...p,updated]);
+    if (isNew && showNew) setNewGymId(updated.id);
     setEditingGym(null);
   };
   const deleteGym = id => {
@@ -154,6 +152,30 @@ export default function App() {
   }, [activeGym?.id]); // eslint-disable-line
 
   const gymHasRanges = !!activeGym?.ranges?.length;
+
+  const addProject = p => setProjects(prev => [...prev, p]);
+  const deleteProject = id => setProjects(prev => prev.filter(p => p.id !== id));
+  const logProjectAttempt = ({ projectId, sessionId, date, attempts, result }) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+    setProjects(prev => prev.map(p => {
+      if (p.id !== projectId) return p;
+      const idx = p.history.findIndex(h => h.sessionId === sessionId);
+      const entry = { sessionId, date, attempts, result };
+      const history = idx >= 0 ? p.history.map((h,i) => i===idx ? entry : h) : [...p.history, entry];
+      return { ...p, history };
+    }));
+    // Mirror to session boulders so project attempts count in stats
+    setSessions(prev => prev.map(s => {
+      if (s.id !== sessionId) return s;
+      const boulder = {
+        ...makeBoulder({ gi: project.gi, sent: result === 'sent' || result === 'flashed', attempts }),
+        source: 'project', projectId,
+      };
+      const rest = s.boulders.filter(b => !(b.source === 'project' && b.projectId === projectId));
+      return { ...s, boulders: [...rest, boulder] };
+    }));
+  };
 
   const exercisesByCategory = useMemo(()=>{
     const grouped = {};
@@ -173,8 +195,10 @@ export default function App() {
           gradeSystem={gradeSystem} setGradeSystem={setGradeSystem}
           gyms={gyms}
           onEditGym={setEditingGym}
-          onNewGym={()=>setEditingGym({id:"",name:"",ranges:[]})}
+          onNewGym={()=>setEditingGym({id:`gym_${uid()}`,name:"",ranges:[]})}
           onClose={()=>setShowSettings(false)}
+          themeKey={themeKey} setThemeKey={setThemeKey}
+          customColors={customColors} setCustomColors={setCustomColors}
         />
       )}
 
@@ -220,15 +244,13 @@ export default function App() {
           gyms={gyms}
           newGymId={newGymId} setNewGymId={setNewGymId}
           newGoal={newGoal} setNewGoal={setNewGoal}
-          addingGym={addingGym} setAddingGym={setAddingGym}
-          gymName={gymName} setGymName={setGymName}
-          onQuickAddGym={quickAddGym}
+          onNewGym={()=>setEditingGym({id:`gym_${uid()}`,name:"",ranges:[]})}
           onStart={startSession}
-          onCancel={()=>{setShowNew(false);setAddingGym(false);}}
+          onCancel={()=>setShowNew(false)}
         />
       )}
 
-      <div className="bg-bg min-h-screen max-w-[430px] mx-auto flex flex-col pb-[72px]">
+      <div className="bg-bg min-h-screen max-w-[430px] mx-5 sm:mx-auto flex flex-col pb-[72px] border-x border-border">
 
         {/* Header */}
         <div className="px-5 pt-6 pb-4 flex justify-between items-center border-b border-border">
@@ -277,6 +299,8 @@ export default function App() {
             logBoulder={logBoulder} logTraining={logTraining}
             deleteLiveBoulder={deleteLiveBoulder} deleteLiveTraining={deleteLiveTraining}
             setShowNew={setShowNew} setTab={setTab} setShowEnd={setShowEnd}
+            projects={projects}
+            onAddProject={addProject} onLogProject={logProjectAttempt} onDeleteProject={deleteProject}
           />
         )}
 

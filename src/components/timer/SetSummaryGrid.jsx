@@ -4,7 +4,7 @@ export default function SetSummaryGrid({ setLogs, sets, climbs, grades, gym }) {
   return (
     <div className="w-full max-w-[380px] px-1">
       {Array.from({length:sets},(_,si)=>{
-        const log = setLogs[si];
+        const log = setLogs[si + 1];
         return (
           <div key={si} className="mb-1.5">
             <div className="font-mono text-[9px] text-muted tracking-[2px] mb-1">SET {si+1}</div>

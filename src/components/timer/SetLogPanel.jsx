@@ -4,18 +4,19 @@ import GradeSelector from '../pickers/GradeSelector';
 import StyleSelector from '../pickers/StyleSelector';
 import SendFellToggle from '../pickers/SendFellToggle';
 
-export default function SetLogPanel({ n, targetGi=4, grades, gym, existing, onSave, onSkip, label="CLIMB", fullScreen=false }) {
+export default function SetLogPanel({ n, targetGi=4, grades, gym, existing, onSave, onSkip, label="CLIMB", fullScreen=false, showAttempts=false }) {
   const initSlots = () => Array.from({length:n}, (_,i) => ({
     gi: existing?.[i]?.gi ?? targetGi,
     styles: existing?.[i]?.styles ?? [],
-    sent: existing?.[i]?.sent ?? true,
+    sent: existing?.[i]?.sent ?? !showAttempts,
+    attempts: existing?.[i]?.attempts ?? 1,
   }));
 
   const [slots, setSlots] = useState(initSlots);
   const [activeSlot, setActiveSlot] = useState(null);
 
   const updSlot = (i, patch) => setSlots(p => p.map((s,j) => j===i ? {...s,...patch} : s));
-  const save = () => onSave(slots.map(({gi,styles,sent})=>({gi,styles,sent})));
+  const save = () => onSave(slots.map(({gi,styles,sent,attempts})=>({gi,styles,sent,attempts})));
 
   return (
     <div className={fullScreen
@@ -52,10 +53,22 @@ export default function SetLogPanel({ n, targetGi=4, grades, gym, existing, onSa
                   fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 600, letterSpacing: 1,
                 }}>{grades[slot.gi] ?? `#${slot.gi}`}</button>
 
-                {/* Sent/fell toggle */}
-                <div className="flex-1">
-                  <SendFellToggle sent={slot.sent} setSent={v=>updSlot(i,{sent:v})} size="compact"/>
-                </div>
+                {/* Sent/fell or attempts stepper */}
+                {showAttempts ? (
+                  <div className="flex items-center gap-1.5">
+                    <button onClick={()=>updSlot(i,{attempts:Math.max(1,(slot.attempts||1)-1)})}
+                      style={{width:26,height:26,borderRadius:6,border:'1px solid var(--color-border)',background:'transparent',color:'var(--color-muted)',fontFamily:'var(--font-mono)',fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>−</button>
+                    <span style={{fontFamily:'var(--font-mono)',fontSize:13,color:'var(--color-text)',minWidth:16,textAlign:'center'}}>{slot.attempts||1}</span>
+                    <button onClick={()=>updSlot(i,{attempts:(slot.attempts||1)+1})}
+                      style={{width:26,height:26,borderRadius:6,border:'1px solid var(--color-border)',background:'transparent',color:'var(--color-muted)',fontFamily:'var(--font-mono)',fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+                    <div style={{width:1,height:20,background:'var(--color-border)',margin:'0 2px'}}/>
+                    <SendFellToggle sent={slot.sent} setSent={v=>updSlot(i,{sent:v})} size="compact"/>
+                  </div>
+                ) : (
+                  <div className="flex-1">
+                    <SendFellToggle sent={slot.sent} setSent={v=>updSlot(i,{sent:v})} size="compact"/>
+                  </div>
+                )}
 
                 {/* Style badges */}
                 <div className="flex gap-1 shrink-0">
