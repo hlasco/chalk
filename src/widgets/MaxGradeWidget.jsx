@@ -122,7 +122,7 @@ export default function MaxGradeWidget({ allSessions, grades, period, agg }) {
       </div>
 
       <ResponsiveContainer width="100%" height={140}>
-        <AreaChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 10, right: 22, left: -4, bottom: 0 }}>
           <defs>
             <linearGradient id={GRAD_SEND} x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%"  stopColor={COLOR_SEND} stopOpacity={0.25} />
@@ -147,7 +147,7 @@ export default function MaxGradeWidget({ allSessions, grades, period, agg }) {
             tickFormatter={v => grades?.[Math.round(v)] ?? ''}
             tickCount={Math.min(6, maxGi - minGi + 3)}
             tick={{ fontSize: 8, fill: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}
-            axisLine={false} tickLine={false} width={34}
+            axisLine={false} tickLine={false} width={28}
           />
           <Tooltip
             content={

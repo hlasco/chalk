@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import { EXERCISE_CATEGORIES } from '../../constants';
 import { uid } from '../../utils/uid';
 import { clsx } from 'clsx';
@@ -41,7 +42,7 @@ export default function ExerciseEditor({ exercise, onSave, onCancel }) {
             <div key={i} className="flex gap-1.5 items-center">
               <input value={f.label} onChange={e=>updField(i,"label",e.target.value)} placeholder="Label" className={clsx(inp, "flex-[2]")}/>
               <input value={f.unit} onChange={e=>updField(i,"unit",e.target.value)} placeholder="unit" className={clsx(inp, "flex-1")}/>
-              <button onClick={()=>delField(i)} className="bg-transparent border-none text-muted text-[18px] px-2">✕</button>
+              <button onClick={()=>delField(i)} className="bg-transparent border-none text-muted cursor-pointer p-1.5"><Trash2 size={14}/></button>
             </div>
           ))}
         </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { gradesFor } from '../../utils/gradeUtils';
 import { clsx } from 'clsx';
+import { Trash2 } from 'lucide-react';
 import { inp } from '../../styles/shared';
 import Lbl from '../ui/Lbl';
 import InlineDelete from '../InlineDelete';
@@ -41,7 +42,7 @@ export default function GymEditor({ gym, gradeSystem, onSave, onCancel, onDelete
                   style={{width:36,height:36,borderRadius:6,border:"1px solid var(--color-border)",cursor:"pointer",padding:2,background:"none"}}/>
                 <input value={r.name} onChange={e=>updRange(i,"name",e.target.value)}
                   placeholder="Tier name…" className={clsx(inp, "flex-1")}/>
-                <button onClick={()=>delRange(i)} className="bg-transparent border-none text-muted text-[18px] cursor-pointer px-1">✕</button>
+                <button onClick={()=>delRange(i)} className="bg-transparent border-none text-muted cursor-pointer p-1"><Trash2 size={15}/></button>
               </div>
               <div className="flex gap-2 items-center">
                 <span className="font-mono text-[10px] text-muted">From</span>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { clsx } from 'clsx';
-import { gradeColor, V_GRADES, FONT_GRADES, V_TO_FONT, FONT_TO_V } from '../utils/gradeUtils';
+import { gradeColor, alphaColor, V_GRADES, FONT_GRADES, V_TO_FONT, FONT_TO_V } from '../utils/gradeUtils';
 import { fmtDuration } from '../utils/formatters';
 import { pill } from '../styles/shared';
 import { Button } from '@/components/ui/button';
@@ -9,12 +9,12 @@ import BoulderRow from '../components/BoulderRow';
 import InlineDelete from '../components/InlineDelete';
 import GradeSelector from '../components/pickers/GradeSelector';
 import StyleSelector from '../components/pickers/StyleSelector';
-import SendFellToggle from '../components/pickers/SendFellToggle';
+
 import TrainingForm from '../components/forms/TrainingForm';
 import ProjectLogModal from '../components/projects/ProjectLogModal';
 import { uid } from '../utils/uid';
 
-const isActiveProject = p => !p.history.some(h => h.result === 'sent' || h.result === 'flashed');
+const isActiveProject = p => !p.history.some(h => h.result === 'sent' || h.result === 'abandoned');
 
 export default function LogTab({
   activeId, sessions, active, activeGym, gradeSystem, grades, elapsedMin, exercises, setExercises,
@@ -25,7 +25,7 @@ export default function LogTab({
   useColors, setUseColors, gymHasRanges,
   logBoulder, logTraining, deleteLiveBoulder, deleteLiveTraining,
   setShowNew, setTab, setShowEnd,
-  projects, onAddProject, onLogProject, onDeleteProject,
+  projects, onAddProject, onLogProject, onDeleteProject, onAbandonProject,
 }) {
   const otherGrades = gradeSystem === 'V-Scale' ? FONT_GRADES : V_GRADES;
   const convIdx = gradeSystem === 'V-Scale' ? V_TO_FONT[selGi] : FONT_TO_V[selGi];
@@ -44,7 +44,7 @@ export default function LogTab({
   );
 
   return (
-    <div className="flex-1 overflow-y-auto p-5">
+    <div className="flex-1 min-h-0 overflow-y-auto px-5 pt-5 pb-4">
       {!activeId ? (
         /* ── Empty state ── */
         <div className="flex flex-col items-center pt-16 gap-5">
@@ -155,12 +155,32 @@ export default function LogTab({
                 </div>
               </div>
 
-              {/* Result + Attempts */}
-              <div className="flex gap-4 items-start">
-                <div className="flex-1">
-                  <Lbl>RESULT</Lbl>
-                  <SendFellToggle sent={selResult === 'send'} setSent={v => setSelResult(v ? 'send' : 'proj')} />
+              {/* Result */}
+              <div>
+                <Lbl>RESULT</Lbl>
+                <div className="flex gap-2">
+                  {[
+                    { key: 'flash',   label: '⚡ Flash', col: 'var(--color-accent)'  },
+                    { key: 'send',    label: '✓ Send',   col: 'var(--color-green)'   },
+                    { key: 'attempt', label: '✗ Fell',   col: 'var(--color-red)'     },
+                  ].map(({ key, label, col }) => {
+                    const on = selResult === key;
+                    return (
+                      <button key={key} onClick={() => setSelResult(key)} style={{
+                        flex: 1, padding: '11px 4px', textAlign: 'center',
+                        borderRadius: 8, fontFamily: 'var(--font-mono)', fontSize: 12,
+                        border: `1px solid ${on ? col : 'var(--color-border)'}`,
+                        background: on ? alphaColor(col, 12) : 'transparent',
+                        color: on ? col : 'var(--color-muted)',
+                        cursor: 'pointer',
+                      }}>{label}</button>
+                    );
+                  })}
                 </div>
+              </div>
+
+              {/* Attempts — hidden for flash (always 1) */}
+              {selResult !== 'flash' && (
                 <div>
                   <Lbl>ATTEMPTS</Lbl>
                   <div className="flex gap-1.5">
@@ -168,19 +188,19 @@ export default function LogTab({
                       <button key={n} onClick={() => setSelAttempts(n)} style={{
                         width: 40, height: 40, borderRadius: 8,
                         border: `1px solid ${selAttempts === n ? 'var(--color-accent)' : 'var(--color-border)'}`,
-                        background: selAttempts === n ? 'color-mix(in srgb,var(--color-accent) 12%,transparent)' : 'var(--color-surface)',
+                        background: selAttempts === n ? alphaColor('var(--color-accent)', 12) : 'var(--color-surface)',
                         color: selAttempts === n ? 'var(--color-accent)' : 'var(--color-muted)',
                         fontFamily: 'var(--font-mono)', fontSize: 13, cursor: 'pointer',
                       }}>{n}</button>
                     ))}
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Log button */}
               <Button onClick={logBoulder}
                 className="w-full h-14 bg-accent text-bg hover:bg-accent/90 font-sans text-[15px] font-extrabold rounded-[12px] tracking-[1px]">
-                LOG {selResult === 'send' ? 'SEND' : 'PROJ'} — {grades[selGi]}
+                LOG {selResult === 'flash' ? '⚡ FLASH' : selResult === 'send' ? 'SEND' : 'ATTEMPT'} — {grades[selGi]}
               </Button>
 
               {/* Projects section */}
@@ -235,14 +255,15 @@ export default function LogTab({
                       const sessLog  = p.history.find(h => h.sessionId === active.id);
                       const total    = p.history.reduce((a, h) => a + (h.attempts||0), 0);
                       const col      = gradeColor(p.gi, null);
-                      const lastResult = [...p.history].reverse().find(h => h.result === 'sent' || h.result === 'flashed')?.result;
+                      const lastH    = [...p.history].reverse().find(h => h.result === 'sent' || h.result === 'abandoned');
+                      const isAbandoned = lastH?.result === 'abandoned';
                       return (
                         <div key={p.id}
                           className="flex items-center gap-3 py-3 border-b border-border last:border-b-0 cursor-pointer"
                           style={{ opacity: done ? 0.55 : 1 }}
-                          onClick={() => !done && setLoggingProject(p)}>
+                          onClick={() => setLoggingProject(p)}>
                           <div className="flex-shrink-0 px-2 py-1 rounded-[6px] font-mono text-[10px] font-bold"
-                            style={{ border:`1px solid ${col}`, color:col, background:`${col}18` }}>
+                            style={{ border:`1px solid ${col}`, color:col, background:alphaColor(col,12) }}>
                             {grades[p.gi]??`#${p.gi}`}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -250,14 +271,14 @@ export default function LogTab({
                             <div className="font-mono text-[10px] text-muted">{total} att · {p.history.length} sess</div>
                           </div>
                           <span className="font-mono text-[10px] flex-shrink-0" style={{
-                            color: done
-                              ? (lastResult === 'flashed' ? 'var(--color-accent)' : 'var(--color-green)')
+                            color: isAbandoned ? 'var(--color-red)' : done
+                              ? 'var(--color-green)'
                               : sessLog
                                 ? (sessLog.result === 'working' ? 'var(--color-blue)' : 'var(--color-green)')
                                 : 'var(--color-muted)',
                           }}>
-                            {done
-                              ? (lastResult === 'flashed' ? '⚡ flashed' : '✓ sent')
+                            {isAbandoned ? '✗ abandoned' : done
+                              ? '✓ sent'
                               : sessLog
                                 ? (sessLog.result === 'working' ? 'working' : '✓ done')
                                 : 'log →'}
@@ -288,6 +309,8 @@ export default function LogTab({
                   sessionLog={loggingProject.history.find(h => h.sessionId === active?.id)}
                   onLog={({ attempts, result }) => onLogProject({ projectId:loggingProject.id, sessionId:active.id, date:active.date, attempts, result })}
                   onClose={() => setLoggingProject(null)}
+                  onAbandon={onAbandonProject}
+                  onDelete={onDeleteProject}
                 />
               )}
             </div>
@@ -324,19 +347,16 @@ export default function LogTab({
                                   <div key={sl.set} className="flex gap-1.5 items-center">
                                     <span className="font-mono text-[10px] text-muted w-8">S{sl.set}</span>
                                     <div className="flex gap-1">
-                                      {sl.climbs.map((c, ci) => {
-                                        const col = gradeColor(c.gi, activeGym);
-                                        return (
-                                          <div key={ci}
-                                            className="px-1.5 py-0.5 rounded-[4px] font-mono text-[9px] flex items-center gap-[3px]"
-                                            style={{ border: `1px solid ${col}`, background: '#181818', color: col }}>
-                                            {grades[c.gi] ?? c.gi}
-                                            <span style={{ color: c.sent ? 'var(--color-green)' : 'var(--color-red)' }}>
-                                              {c.sent ? '✓' : '✗'}
-                                            </span>
-                                          </div>
-                                        );
-                                      })}
+                                      {sl.climbs.map((c, ci) => (
+                                        <div key={ci}
+                                          className="px-1.5 py-0.5 rounded-[4px] font-mono text-[9px] flex items-center gap-[3px]"
+                                          style={{ border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)' }}>
+                                          {grades[c.gi] ?? c.gi}
+                                          <span style={{ color: c.sent ? 'var(--color-green)' : 'var(--color-red)' }}>
+                                            {c.sent ? '✓' : '✗'}
+                                          </span>
+                                        </div>
+                                      ))}
                                     </div>
                                   </div>
                                 ))}

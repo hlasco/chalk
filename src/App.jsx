@@ -30,7 +30,7 @@ export default function App() {
 
   const [activeId, setActiveId] = useState(() => load('chalk_activeId', null));
   const [projects, setProjects] = useState(() => load('chalk_projects', []));
-  const [themeKey,     setThemeKey]     = useState(() => load('chalk_themeKey', 'ember'));
+  const [themeKey,     setThemeKey]     = useState(() => load('chalk_themeKey', 'sand'));
   const [customColors, setCustomColors] = useState(() => load('chalk_customColors', {}));
 
   useEffect(() => { localStorage.setItem('chalk_sessions',     JSON.stringify(sessions));     }, [sessions]);
@@ -49,6 +49,7 @@ export default function App() {
 
   const [showNew,     setShowNew]   = useState(false);
   const [newGymId,    setNewGymId]  = useState(gyms[0]?.id ?? null);
+  const [returnToNew, setReturnToNew] = useState(false);
   const [showEnd,     setShowEnd]   = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [editingGym,   setEditingGym] = useState(null);
@@ -90,17 +91,17 @@ export default function App() {
 
   const logBoulder = () => {
     if (!activeId) return;
+    const isFlash = selResult === 'flash';
     const b = makeBoulder({
       gi: selGi,
       styles: selStyles,
-      sent: selResult === "send",
-      attempts: selAttempts,
+      sent: selResult === 'send' || isFlash,
+      attempts: isFlash ? 1 : selAttempts,
       perceived: selPerc,
     });
     setSessions(p=>p.map(s=>s.id===activeId?{...s,boulders:[...s.boulders, b]}:s));
     setSelStyles([]);
     setSelAttempts(1);
-    setSelResult("send");
   };
 
   const logBoulderBatch = (boulders) => {
@@ -134,7 +135,11 @@ export default function App() {
   const saveGym = updated => {
     const isNew = !gyms.some(g => g.id === updated.id);
     setGyms(p=>p.some(g=>g.id===updated.id)?p.map(g=>g.id===updated.id?updated:g):[...p,updated]);
-    if (isNew && showNew) setNewGymId(updated.id);
+    if (isNew && returnToNew) {
+      setNewGymId(updated.id);
+      setShowNew(true);
+      setReturnToNew(false);
+    }
     setEditingGym(null);
   };
   const deleteGym = id => {
@@ -155,6 +160,9 @@ export default function App() {
 
   const addProject = p => setProjects(prev => [...prev, p]);
   const deleteProject = id => setProjects(prev => prev.filter(p => p.id !== id));
+  const abandonProject = id => setProjects(prev => prev.map(p =>
+    p.id !== id ? p : { ...p, history: [...p.history, { date: new Date().toISOString().slice(0,10), attempts: 0, result: 'abandoned' }] }
+  ));
   const logProjectAttempt = ({ projectId, sessionId, date, attempts, result }) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
@@ -169,7 +177,7 @@ export default function App() {
     setSessions(prev => prev.map(s => {
       if (s.id !== sessionId) return s;
       const boulder = {
-        ...makeBoulder({ gi: project.gi, sent: result === 'sent' || result === 'flashed', attempts }),
+        ...makeBoulder({ gi: project.gi, sent: result === 'sent', attempts }),
         source: 'project', projectId,
       };
       const rest = s.boulders.filter(b => !(b.source === 'project' && b.projectId === projectId));
@@ -208,7 +216,7 @@ export default function App() {
           gradeSystem={gradeSystem}
           onSave={saveGym}
           onDelete={editingGym.id?deleteGym:null}
-          onCancel={()=>setEditingGym(null)}
+          onCancel={()=>{ if (returnToNew) { setShowNew(true); setReturnToNew(false); } setEditingGym(null); }}
         />
       )}
 
@@ -244,13 +252,13 @@ export default function App() {
           gyms={gyms}
           newGymId={newGymId} setNewGymId={setNewGymId}
           newGoal={newGoal} setNewGoal={setNewGoal}
-          onNewGym={()=>setEditingGym({id:`gym_${uid()}`,name:"",ranges:[]})}
+          onNewGym={()=>{ setShowNew(false); setReturnToNew(true); setEditingGym({id:`gym_${uid()}`,name:"",ranges:[]}); }}
           onStart={startSession}
           onCancel={()=>setShowNew(false)}
         />
       )}
 
-      <div className="bg-bg min-h-screen max-w-[430px] mx-5 sm:mx-auto flex flex-col pb-[72px] border-x border-border">
+      <div className="bg-bg max-w-[430px] mx-6 sm:mx-auto flex flex-col border-x border-border" style={{ height: '100dvh', paddingBottom: '72px' }}>
 
         {/* Header */}
         <div className="px-5 pt-6 pb-4 flex justify-between items-center border-b border-border">
@@ -300,7 +308,7 @@ export default function App() {
             deleteLiveBoulder={deleteLiveBoulder} deleteLiveTraining={deleteLiveTraining}
             setShowNew={setShowNew} setTab={setTab} setShowEnd={setShowEnd}
             projects={projects}
-            onAddProject={addProject} onLogProject={logProjectAttempt} onDeleteProject={deleteProject}
+            onAddProject={addProject} onLogProject={logProjectAttempt} onDeleteProject={deleteProject} onAbandonProject={abandonProject}
           />
         )}
 

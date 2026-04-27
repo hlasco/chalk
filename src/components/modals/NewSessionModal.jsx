@@ -31,8 +31,15 @@ export default function NewSessionModal({
           ))}
         </div>
 
-        <Lbl>WHERE ARE YOU?</Lbl>
-        <div className="flex flex-col gap-2.5 mb-4">
+        <div className="flex justify-between items-center mb-2">
+          <Lbl style={{ marginBottom: 0 }}>WHERE ARE YOU?</Lbl>
+          <button onClick={onNewGym}
+            className="font-mono text-[10px] text-accent cursor-pointer border border-accent/40 rounded-[6px] px-2 py-1 hover:bg-accent/10 transition-colors"
+            style={{ background: 'transparent' }}>
+            + New gym
+          </button>
+        </div>
+        <div className="flex flex-col gap-2.5 mb-6">
           {gyms.map(g => (
             <button key={g.id} onClick={() => setNewGymId(g.id)}
               className={cn(
@@ -53,11 +60,6 @@ export default function NewSessionModal({
             </button>
           ))}
         </div>
-
-        <button onClick={onNewGym}
-          className="w-full py-3 rounded-[10px] border border-dashed border-border bg-transparent text-muted font-mono text-[11px] cursor-pointer mb-5 hover:border-muted transition-colors">
-          + New gym
-        </button>
 
         <div className="flex gap-3 mt-2">
           <Button onClick={onCancel} variant="outline" className="flex-1 border-border text-muted font-mono">

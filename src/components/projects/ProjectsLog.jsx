@@ -1,26 +1,30 @@
 import { useState, useMemo } from 'react';
+import { Trash2 } from 'lucide-react';
 import { uid } from '../../utils/uid';
 import { gradeColor } from '../../utils/gradeUtils';
+import { alphaColor } from '../../utils/gradeUtils';
 import GradeSelector from '../pickers/GradeSelector';
 import Lbl from '../ui/Lbl';
 
 const getStatus = p => {
-  const sent = [...p.history].reverse().find(h => h.result === 'sent' || h.result === 'flashed');
-  return sent ? sent.result : 'active';
+  const last = [...p.history].reverse().find(h => h.result === 'sent' || h.result === 'flashed' || h.result === 'abandoned');
+  if (!last) return 'active';
+  return last.result === 'abandoned' ? 'abandoned' : last.result;
 };
 
 const totalAttempts = p => p.history.reduce((a, h) => a + (h.attempts || 0), 0);
 
 const RESULT_COLORS = {
-  flashed: 'var(--color-accent)',
-  sent:    'var(--color-green)',
-  working: 'var(--color-muted)',
+  flashed:   'var(--color-accent)',
+  sent:      'var(--color-green)',
+  working:   'var(--color-muted)',
+  abandoned: 'var(--color-red)',
 };
-const RESULT_LABELS = { flashed: '⚡ Flash', sent: '✓ Send', working: 'Working' };
+const RESULT_LABELS = { flashed: '⚡ Flash', sent: '✓ Send', working: 'Working', abandoned: '✗ Abandoned' };
 
 export default function ProjectsLog({
   projects,
-  onAdd, onLog, onDelete,
+  onAdd, onLog, onDelete, onAbandon,
   active, activeId, activeGym,
   grades, gradeSystem,
 }) {
@@ -217,12 +221,21 @@ export default function ProjectsLog({
                   </div>
                 )}
 
-                {/* Delete */}
-                <button onClick={() => { onDelete(p.id); setExpanded(null); }}
-                  className="self-start font-mono text-[10px] cursor-pointer bg-transparent border-none p-0"
-                  style={{ color: 'var(--color-red)' }}>
-                  Delete project
-                </button>
+                {/* Abandon / Delete */}
+                <div className="flex gap-2 pt-1">
+                  {status === 'active' && onAbandon && (
+                    <button onClick={() => { onAbandon(p.id); setExpanded(null); }}
+                      className="flex-1 py-2 rounded-[8px] font-mono text-[10px] cursor-pointer"
+                      style={{ border: '1px solid var(--color-border)', color: 'var(--color-muted)', background: 'transparent' }}>
+                      ✗ Abandon
+                    </button>
+                  )}
+                  <button onClick={() => { onDelete(p.id); setExpanded(null); }}
+                    className="py-2 px-3 rounded-[8px] font-mono text-[10px] cursor-pointer flex items-center gap-1.5"
+                    style={{ border: '1px solid color-mix(in srgb, var(--color-red) 40%, transparent)', color: 'var(--color-red)', background: alphaColor('var(--color-red)', 6) }}>
+                    <Trash2 size={11}/> Delete
+                  </button>
+                </div>
               </div>
             )}
           </div>

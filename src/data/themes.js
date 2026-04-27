@@ -239,8 +239,10 @@ export function applyTheme(themeKey, customColors = {}) {
   root.style.setProperty('--color-input',                  vars['--color-border']);
   root.style.setProperty('--color-ring',                   vars['--color-accent']);
 
-  // outer background (visible in margins)
+  // outer background (visible in margins around the app container)
   const [h, s, l] = hexToHsl(vars['--color-bg']);
   const dark = l < 40;
-  document.body.style.background = hslToHex(h, s, dark ? Math.max(0, l-2) : Math.min(100, l+4));
+  const outerBg = hslToHex(h, s, dark ? Math.max(0, l-2) : Math.min(100, l+4));
+  document.body.style.background = outerBg;
+  document.documentElement.style.background = outerBg;
 }

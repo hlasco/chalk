@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { clsx } from 'clsx';
+import { Trash2 } from 'lucide-react';
 
 const btn = (large) => clsx(
   'bg-transparent border border-border rounded-[6px] font-mono cursor-pointer leading-none text-muted',
@@ -16,5 +17,5 @@ export default function InlineDelete({ onDelete, size = "small" }) {
       <button onClick={()=>setAsking(false)} className={btn(large)}>No</button>
     </div>
   );
-  return <button onClick={()=>setAsking(true)} className={btn(large)}>✕</button>;
+  return <button onClick={()=>setAsking(true)} className={btn(large)} style={{ display:'flex', alignItems:'center', gap:4 }}><Trash2 size={large?14:12}/></button>;
 }

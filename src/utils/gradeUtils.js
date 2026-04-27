@@ -27,7 +27,22 @@ export const gradeColor = (gi, gym) => {
     const r = gym.ranges.find(r => gi >= r.minGi && gi <= r.maxGi);
     if (r) return r.color;
   }
-  return DEFAULT_GRADE_COLORS[gi] ?? "#888";
+  return 'var(--color-accent)';
+};
+
+// Safe alpha mix — works with both hex (#ff0000) and CSS vars (var(--color-accent))
+export const alphaColor = (color, pct) =>
+  `color-mix(in srgb, ${color} ${pct}%, transparent)`;
+
+// Returns the color unless it's too light or too dark to read on mid-tone backgrounds.
+// Very light colors (white, yellow) and very dark colors (black) fall back to the theme text color.
+export const readableGradeText = (hexColor) => {
+  if (!hexColor || !hexColor.startsWith('#')) return hexColor;
+  const r = parseInt(hexColor.slice(1,3),16);
+  const g = parseInt(hexColor.slice(3,5),16);
+  const b = parseInt(hexColor.slice(5,7),16);
+  const lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+  return (lum > 0.62 || lum < 0.12) ? 'var(--color-text)' : hexColor;
 };
 
 export const gradeTierName = (gi, gym) => {

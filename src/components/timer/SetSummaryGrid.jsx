@@ -1,4 +1,4 @@
-import { gradeColor } from '../../utils/gradeUtils';
+import { gradeColor, alphaColor } from '../../utils/gradeUtils';
 
 export default function SetSummaryGrid({ setLogs, sets, climbs, grades, gym }) {
   return (
@@ -15,9 +15,9 @@ export default function SetSummaryGrid({ setLogs, sets, climbs, grades, gym }) {
                 return (
                   <div key={ci} style={{
                     padding:"5px 8px",borderRadius:6,minWidth:42,textAlign:"center",
-                    border:`1px solid ${col}`,
-                    background:c?"#1a1a1a":"#0f0f0f",
-                    fontFamily:"var(--font-mono)",fontSize:11,color:c?col:"var(--color-dim)",
+                    border:`1px solid ${c ? col : 'var(--color-border)'}`,
+                    background: c ? alphaColor(col, 10) : 'var(--color-s2)',
+                    fontFamily:"var(--font-mono)",fontSize:11,color:c?"var(--color-text)":"var(--color-dim)",
                   }}>
                     {c ? <>
                       {grades[c.gi]??`#${c.gi}`}

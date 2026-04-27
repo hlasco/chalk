@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { clsx } from 'clsx';
-import { gradeColor } from '../../utils/gradeUtils';
+import { gradeColor, readableGradeText } from '../../utils/gradeUtils';
 
 function GradeCompactPicker({ gi, setGi, grades, gym }) {
   const [offset, setOffset] = useState(0);
@@ -18,10 +18,16 @@ function GradeCompactPicker({ gi, setGi, grades, gym }) {
           const on = idx === gi;
           const c = gradeColor(idx, gym);
           return (
-            <button key={idx} onClick={()=>{setGi(idx);setOffset(0);}} style={{borderColor:on?c:undefined,color:on?c:undefined}} className={clsx(
-              'py-2 px-1 rounded-[6px] min-w-[44px] font-mono text-xs',
-              on ? 'border font-semibold bg-[#242424]' : 'border border-border font-light bg-s2 text-muted'
-            )}>{gl}</button>
+            <button key={idx} onClick={()=>{setGi(idx);setOffset(0);}}
+              style={{
+                borderColor: on ? c : 'var(--color-border)',
+                color: on ? c : 'var(--color-muted)',
+                background: on ? 'var(--color-s2)' : 'var(--color-s2)',
+              }}
+              className={clsx('py-2 px-1 rounded-[6px] min-w-[44px] font-mono text-xs border',
+                on ? 'font-semibold' : 'font-light')}>
+              {gl}
+            </button>
           );
         })}
       </div>
@@ -43,8 +49,14 @@ export default function GradeSelector({ gi, setGi, grades, gym, mode="grid", use
           const toLabel   = grades[r.maxGi] ?? `#${r.maxGi}`;
           const rangeStr  = r.minGi === r.maxGi ? fromLabel : `${fromLabel} ${toLabel}`;
           return (
-            <button key={i} onClick={()=>setGi(midGi)} style={{borderColor:r.color,color:r.color,filter:on?"none":"brightness(0.55)"}}
-              className={clsx('py-3 px-1.5 rounded-[8px] font-mono text-xs flex flex-col items-center gap-1',on?'bg-[#242424] font-semibold':'bg-[#1a1a1a] font-light')}>
+            <button key={i} onClick={()=>setGi(midGi)}
+              style={{
+                borderColor: r.color,
+                color: readableGradeText(r.color),
+                background: on ? 'var(--color-surface)' : 'var(--color-s2)',
+                filter: on ? 'none' : 'opacity(0.5)',
+              }}
+              className={clsx('py-3 px-1.5 rounded-[8px] font-mono text-xs flex flex-col items-center gap-1 border', on ? 'font-semibold' : 'font-light')}>
               <div className="flex items-center gap-1.5">
                 <span className="w-[9px] h-[9px] rounded-full shrink-0 inline-block" style={{background:r.color}}/>
                 <span>{r.name||"—"}</span>
@@ -66,11 +78,20 @@ export default function GradeSelector({ gi, setGi, grades, gym, mode="grid", use
       <div className="grid grid-cols-5 gap-[5px]">
         {grades.map((g,gidx)=>{
           const tier = gym.ranges.find(r => gidx >= r.minGi && gidx <= r.maxGi);
-          const col  = tier?.color;
+          const col  = tier?.color ?? 'var(--color-border)';
+          const textCol = readableGradeText(col);
           const on   = gi === gidx;
           return (
-            <button key={gidx} onClick={()=>setGi(gidx)} style={{borderColor:col,color:col,filter:on?"brightness(0.9)":"brightness(0.45)"}}
-              className={clsx('py-[11px] rounded-[8px] border font-mono text-xs',on?'bg-[#242424] font-semibold':'bg-[#1a1a1a] font-light')}>{g}</button>
+            <button key={gidx} onClick={()=>setGi(gidx)}
+              style={{
+                borderColor: col,
+                color: textCol,
+                background: on ? 'var(--color-surface)' : 'var(--color-s2)',
+                opacity: on ? 1 : 0.45,
+              }}
+              className={clsx('py-[11px] rounded-[8px] border font-mono text-xs', on ? 'font-semibold' : 'font-light')}>
+              {g}
+            </button>
           );
         })}
       </div>
@@ -82,10 +103,17 @@ export default function GradeSelector({ gi, setGi, grades, gym, mode="grid", use
       {grades.map((g,gidx)=>{
         const on = gi === gidx;
         return (
-          <button key={gidx} onClick={()=>setGi(gidx)} className={clsx(
-            'py-[11px] rounded-[8px] border font-mono text-xs',
-            on ? 'border-text bg-[#242424] text-text font-semibold' : 'border-border bg-s2 text-muted font-light'
-          )}>{g}</button>
+          <button key={gidx} onClick={()=>setGi(gidx)}
+            style={{
+              borderColor: on ? 'var(--color-accent)' : 'var(--color-border)',
+              color: on ? 'var(--color-accent)' : 'var(--color-muted)',
+              background: on
+                ? 'color-mix(in srgb, var(--color-accent) 10%, var(--color-surface))'
+                : 'var(--color-s2)',
+            }}
+            className="py-[11px] rounded-[8px] border font-mono text-xs">
+            {g}
+          </button>
         );
       })}
     </div>

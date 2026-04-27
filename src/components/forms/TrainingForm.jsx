@@ -175,7 +175,7 @@ export default function TrainingForm({
       )}
 
       {detailStep && gradeField && (
-        <div className="fixed inset-0 z-[500] flex flex-col bg-[#030303]">
+        <div className="fixed inset-0 z-[500] flex flex-col" style={{ background: 'var(--color-bg)' }}>
           <div className="flex items-center justify-between px-5 pt-6 pb-3">
             <div className="font-mono text-[10px] text-muted tracking-[3px]">
               {detailStep.total > 1 ? `SET ${detailStep.current} / ${detailStep.total}` : ex?.name?.toUpperCase()}

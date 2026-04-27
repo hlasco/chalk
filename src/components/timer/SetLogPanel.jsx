@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { gradeColor } from '../../utils/gradeUtils';
+import { gradeColor, alphaColor } from '../../utils/gradeUtils';
 import GradeSelector from '../pickers/GradeSelector';
 import StyleSelector from '../pickers/StyleSelector';
 import SendFellToggle from '../pickers/SendFellToggle';
@@ -20,9 +20,9 @@ export default function SetLogPanel({ n, targetGi=4, grades, gym, existing, onSa
 
   return (
     <div className={fullScreen
-      ? "flex-1 overflow-y-auto bg-[#0c0c0c] px-5 pt-6 pb-6"
-      : "bg-[#0c0c0c] border-t border-border px-5 pt-4 pb-6 max-h-[60vh] overflow-y-auto"
-    }>
+      ? "flex-1 overflow-y-auto px-5 pt-6 pb-6"
+      : "border-t border-border px-5 pt-4 pb-6 max-h-[60vh] overflow-y-auto"
+    } style={{ background: 'var(--color-surface)' }}>
       <div className="flex justify-between items-center mb-4">
         <div className="font-mono text-[11px] text-muted tracking-[2px]">
           LOG {n} {label.toUpperCase()}{n!==1?"S":""}
@@ -47,9 +47,9 @@ export default function SetLogPanel({ n, targetGi=4, grades, gym, existing, onSa
                 {/* Grade button — primary action, large tap target */}
                 <button onClick={()=>setActiveSlot(isOpen?null:i)} style={{
                   width:72, height:48, borderRadius:10, flexShrink:0,
-                  border:`1px solid ${col}55`,
-                  background: isOpen ? `${col}22` : `${col}0f`,
-                  color: col,
+                  border:`1px solid ${isOpen ? col : 'var(--color-border)'}`,
+                  background: isOpen ? alphaColor(col, 14) : 'var(--color-s2)',
+                  color: 'var(--color-text)',
                   fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 600, letterSpacing: 1,
                 }}>{grades[slot.gi] ?? `#${slot.gi}`}</button>
 

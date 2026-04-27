@@ -25,7 +25,7 @@ export default function HomeTab({ sessions, exercises, gyms, gradeSystem, grades
   const ctx = { stats, sessions: filteredSessions, allSessions: sessions, exercises, gyms, grades, gradeSystem, period, setPeriod, agg, setAgg };
 
   return (
-    <div className="flex-1 overflow-y-auto p-5">
+    <div className="flex-1 min-h-0 overflow-y-auto px-5 pt-5 pb-4">
       {/* Filter toggle */}
       <button onClick={() => setFilterOpen(p => !p)} className={clsx(
         'w-full px-3.5 py-[10px] rounded-[10px] mb-3 font-mono text-[11px] flex justify-between items-center border cursor-pointer',

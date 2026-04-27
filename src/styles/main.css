@@ -1,37 +1,37 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Ember palette (default — overridden at runtime) ─────────── */
-  --color-bg:      #0a0704;
-  --color-surface: #130e09;
-  --color-s2:      #1c1510;
-  --color-border:  #2a1e12;
-  --color-dim:     #332416;
-  --color-accent:  #ff6b35;
-  --color-text:    #f5ede6;
-  --color-muted:   #6b4a35;
-  --color-red:     #f06060;
-  --color-green:   #4ade80;
-  --color-blue:    #60a8f8;
-  --color-purple:  #a78bfa;
+  /* ── Sand palette (default — overridden at runtime) ─────────── */
+  --color-bg:      #f5f0e6;
+  --color-surface: #faf8f2;
+  --color-s2:      #ece5d4;
+  --color-border:  #ddd3be;
+  --color-dim:     #ccc0a6;
+  --color-accent:  #b86a18;
+  --color-text:    #2c1f0e;
+  --color-muted:   #907858;
+  --color-red:     #c0392b;
+  --color-green:   #4a8f52;
+  --color-blue:    #3478a0;
+  --color-purple:  #7c3aed;
 
   /* ── shadcn/ui compatibility aliases ─────────── */
-  --color-background:             #0a0704;
-  --color-foreground:             #f5ede6;
-  --color-card:                   #130e09;
-  --color-card-foreground:        #f5ede6;
-  --color-popover:                #130e09;
-  --color-popover-foreground:     #f5ede6;
-  --color-primary:                #ff6b35;
-  --color-primary-foreground:     #0a0704;
-  --color-secondary:              #1c1510;
-  --color-secondary-foreground:   #f5ede6;
-  --color-muted-bg:               #1c1510;
-  --color-muted-foreground:       #6b4a35;
-  --color-destructive:            #f06060;
-  --color-destructive-foreground: #f5ede6;
-  --color-input:                  #2a1e12;
-  --color-ring:                   #ff6b35;
+  --color-background:             #f5f0e6;
+  --color-foreground:             #2c1f0e;
+  --color-card:                   #faf8f2;
+  --color-card-foreground:        #2c1f0e;
+  --color-popover:                #faf8f2;
+  --color-popover-foreground:     #2c1f0e;
+  --color-primary:                #b86a18;
+  --color-primary-foreground:     #f5f0e6;
+  --color-secondary:              #ece5d4;
+  --color-secondary-foreground:   #2c1f0e;
+  --color-muted-bg:               #ece5d4;
+  --color-muted-foreground:       #907858;
+  --color-destructive:            #c0392b;
+  --color-destructive-foreground: #f5f0e6;
+  --color-input:                  #ddd3be;
+  --color-ring:                   #b86a18;
 
   /* ── Fonts ────────────────────────────────────── */
   --font-sans: 'Syne', sans-serif;

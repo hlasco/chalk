@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { gradesFor, gradeColor } from '../../utils/gradeUtils';
+import { gradesFor, gradeColor, alphaColor } from '../../utils/gradeUtils';
 import { fmtDuration } from '../../utils/formatters';
 import { inp } from '../../styles/shared';
 import Lbl from '../ui/Lbl';
@@ -52,7 +52,7 @@ function SessionStats({ s, grades, gym }) {
       <div className="flex gap-2 mb-4 flex-wrap">
         {maxGi != null && (
           <span className="font-mono text-[11px] px-2.5 py-1 rounded-full"
-            style={{ color: gradeColor(maxGi, gym), background: `${gradeColor(maxGi, gym)}18`, border: `1px solid ${gradeColor(maxGi, gym)}40` }}>
+            style={{ color: gradeColor(maxGi, gym), background: alphaColor(gradeColor(maxGi, gym), 12), border: `1px solid ${alphaColor(gradeColor(maxGi, gym), 30)}` }}>
             TOP {grades[maxGi] ?? maxGi}
           </span>
         )}
@@ -71,23 +71,22 @@ function SessionStats({ s, grades, gym }) {
       {dist.length > 0 && (
         <div className="flex flex-col gap-1.5">
           {dist.map(({ gi, sends: s2, fails }) => {
-            const col = gradeColor(gi, gym);
             const sendW = Math.round((s2 / maxCount) * 100);
             const failW = Math.round((fails / maxCount) * 100);
             return (
               <div key={gi} className="flex items-center gap-2">
-                <div className="font-mono text-[10px] w-8 shrink-0 text-right" style={{ color: col }}>{grades[gi] ?? gi}</div>
+                <div className="font-mono text-[10px] w-8 shrink-0 text-right text-muted">{grades[gi] ?? gi}</div>
                 <div className="flex-1 flex gap-[2px] h-[14px] items-center">
-                  {s2 > 0 && <div className="h-full rounded-[3px]" style={{ width: `${sendW}%`, background: col, opacity: 0.85 }}/>}
-                  {fails > 0 && <div className="h-full rounded-[3px]" style={{ width: `${failW}%`, background: col, opacity: 0.25 }}/>}
+                  {s2 > 0 && <div className="h-full rounded-[3px]" style={{ width: `${sendW}%`, background: 'var(--color-accent)' }}/>}
+                  {fails > 0 && <div className="h-full rounded-[3px]" style={{ width: `${failW}%`, background: 'color-mix(in srgb,var(--color-accent) 25%,transparent)' }}/>}
                 </div>
                 <div className="font-mono text-[9px] text-muted w-6 text-right shrink-0">{s2 + fails}</div>
               </div>
             );
           })}
           <div className="flex gap-3 mt-1.5">
-            <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 rounded-[2px] bg-accent opacity-85"/><span className="font-mono text-[9px] text-muted">send</span></div>
-            <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 rounded-[2px] bg-accent opacity-25"/><span className="font-mono text-[9px] text-muted">fail</span></div>
+            <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 rounded-[2px]" style={{ background: 'var(--color-accent)' }}/><span className="font-mono text-[9px] text-muted">send</span></div>
+            <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 rounded-[2px]" style={{ background: 'color-mix(in srgb,var(--color-accent) 25%,transparent)' }}/><span className="font-mono text-[9px] text-muted">fail</span></div>
           </div>
         </div>
       )}
@@ -165,11 +164,10 @@ export default function SessionEditor({ session, gyms, exercises, gradeSystem, o
                                   <span className="font-mono text-[9px] text-muted w-6">S{sl.set}</span>
                                   <div className="flex gap-1 flex-wrap">
                                     {(sl.climbs || []).map((c, ci) => {
-                                      const gc = gradeColor(c.gi, gym);
                                       return (
                                         <div key={ci}
                                           className="px-1.5 py-0.5 rounded-[4px] font-mono text-[9px] flex items-center gap-[3px]"
-                                          style={{ border: `1px solid ${gc}`, background: '#181818', color: gc }}>
+                                          style={{ border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)' }}>
                                           {grades[c.gi] ?? c.gi}
                                           {c.attempts > 1 && <span style={{color:'var(--color-muted)'}}>×{c.attempts}</span>}
                                           <span style={{ color: c.sent ? 'var(--color-green)' : 'var(--color-red)' }}>

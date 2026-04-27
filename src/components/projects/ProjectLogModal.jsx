@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { gradeColor } from '../../utils/gradeUtils';
+import { Trash2 } from 'lucide-react';
+import { gradeColor, alphaColor } from '../../utils/gradeUtils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
-const RESULT_COLORS = { flashed:'var(--color-accent)', sent:'var(--color-green)', working:'var(--color-muted)' };
-const RESULT_LABELS = { flashed:'⚡ Flash', sent:'✓ Send', working:'Working' };
+const RESULT_COLORS = { sent:'var(--color-green)', working:'var(--color-muted)' };
+const RESULT_LABELS = { sent:'✓ Send', working:'Working' };
 
-export default function ProjectLogModal({ project, grades, sessionLog, onLog, onClose }) {
+export default function ProjectLogModal({ project, grades, sessionLog, onLog, onClose, onAbandon, onDelete }) {
   const [attempts, setAttempts] = useState(sessionLog?.attempts ?? 1);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleLog = result => {
     onLog({ attempts, result });
@@ -27,7 +29,7 @@ export default function ProjectLogModal({ project, grades, sessionLog, onLog, on
         {/* Project identity */}
         <div className="flex items-center gap-3 mb-6 p-3 rounded-[12px] bg-s2 border border-border">
           <div className="px-2.5 py-1.5 rounded-[8px] font-mono text-[13px] font-bold flex-shrink-0"
-            style={{ border:`1px solid ${gradeCol}`, color:gradeCol, background:`${gradeCol}18` }}>
+            style={{ border:`1px solid ${gradeCol}`, color:gradeCol, background:alphaColor(gradeCol,12) }}>
             {grades[project.gi] ?? `#${project.gi}`}
           </div>
           <div>
@@ -66,15 +68,10 @@ export default function ProjectLogModal({ project, grades, sessionLog, onLog, on
 
         {/* Result buttons */}
         <div className="flex flex-col gap-2.5">
-          <button onClick={() => handleLog('flashed')}
+          <button onClick={() => handleLog('sent')}
             className="w-full py-4 rounded-[12px] font-sans font-extrabold text-[15px] cursor-pointer border-none"
             style={{ background:'var(--color-accent)', color:'var(--color-bg)' }}>
-            ⚡ FLASH
-          </button>
-          <button onClick={() => handleLog('sent')}
-            className="w-full py-3.5 rounded-[12px] font-sans font-bold text-[14px] cursor-pointer border-none"
-            style={{ background:'color-mix(in srgb,var(--color-green) 12%,transparent)', color:'var(--color-green)', border:'1px solid var(--color-green)' }}>
-            ✓ Send
+            ✓ SEND
           </button>
           <button onClick={() => handleLog('working')}
             className="w-full py-3.5 rounded-[12px] font-mono text-[13px] cursor-pointer"
@@ -82,6 +79,36 @@ export default function ProjectLogModal({ project, grades, sessionLog, onLog, on
             Still Working
           </button>
         </div>
+
+        {/* Abandon / Delete */}
+        {(onAbandon || onDelete) && (
+          <div className="flex gap-2 mt-5 pt-4 border-t border-border">
+            {onAbandon && (
+              <button onClick={() => { onAbandon(project.id); onClose(); }}
+                className="flex-1 py-2.5 rounded-[10px] font-mono text-[11px] cursor-pointer"
+                style={{ border:'1px solid var(--color-border)', color:'var(--color-muted)', background:'transparent' }}>
+                ✗ Abandon
+              </button>
+            )}
+            {onDelete && !confirmDelete && (
+              <button onClick={() => setConfirmDelete(true)}
+                className="py-2.5 px-3.5 rounded-[10px] font-mono text-[11px] cursor-pointer flex items-center gap-1.5"
+                style={{ border:`1px solid color-mix(in srgb, var(--color-red) 40%, transparent)`, color:'var(--color-red)', background:alphaColor('var(--color-red)', 6) }}>
+                <Trash2 size={12}/> Delete
+              </button>
+            )}
+            {onDelete && confirmDelete && (
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] text-muted">Sure?</span>
+                <button onClick={() => { onDelete(project.id); onClose(); }}
+                  className="px-3 py-2 rounded-[8px] font-mono text-[11px] cursor-pointer"
+                  style={{ background:'var(--color-red)', color:'#fff', border:'none' }}>Yes</button>
+                <button onClick={() => setConfirmDelete(false)}
+                  className="px-3 py-2 rounded-[8px] font-mono text-[11px] cursor-pointer border border-border bg-transparent text-muted">No</button>
+              </div>
+            )}
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

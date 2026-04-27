@@ -6,7 +6,7 @@ import InlineDelete from '../components/InlineDelete';
 
 export default function LibraryTab({ exercises, setExercises, exercisesByCategory, setEditingEx }) {
   return (
-    <div className="flex-1 overflow-y-auto p-5">
+    <div className="flex-1 min-h-0 overflow-y-auto px-5 pt-5 pb-4">
       <div className="flex justify-between items-center mb-6">
         <Lbl style={{marginBottom:0}}>EXERCISE LIBRARY</Lbl>
         <button onClick={()=>setEditingEx({id:`ex_${uid()}`,name:"",category:"Custom",fields:[{key:"sets",label:"Sets",unit:""}],builtin:false})}

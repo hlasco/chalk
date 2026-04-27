@@ -20,6 +20,17 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
   const openLogPanel  = () => { logPanelRef.current = true;  setShowLogPanel(true);  };
   const closeLogPanel = () => { logPanelRef.current = false; setShowLogPanel(false); };
 
+  // Keep screen on while timer is active
+  useEffect(() => {
+    let wakeLock = null;
+    const acquire = async () => {
+      try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); }
+      catch { /* not supported or denied — silent fail */ }
+    };
+    acquire();
+    return () => { wakeLock?.release(); };
+  }, []);
+
   useEffect(() => {
     makeBeep(660, 0.1);
 
@@ -135,7 +146,7 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[500] bg-[#030303] flex flex-col">
+    <div className="fixed inset-0 z-[500] flex flex-col" style={{ background: 'var(--color-bg)' }}>
 
       {/* Full-screen log panel — hides the timer while active */}
       {logPerSet && showLogPanel && (
@@ -166,7 +177,7 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
             {phase==="work" && workSec===null ? (
               <button onClick={()=>advanceRef.current?.()} style={{
                 width:176,height:176,borderRadius:"50%",
-                border:"2px solid var(--color-green)",background:"#081208",
+                border:"2px solid var(--color-green)",background:"color-mix(in srgb, var(--color-green) 8%, var(--color-bg))",
                 display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,
               }}>
                 <div style={{fontFamily:"var(--font-mono)",fontSize:9,color:"var(--color-green)",letterSpacing:3}}>TAP WHEN DONE</div>
@@ -177,7 +188,7 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
             ) : (
               <div className="relative w-[176px] h-[176px]">
                 <svg width="176" height="176" style={{position:"absolute",top:0,left:0}}>
-                  <circle cx={CX} cy={CY} r={R} fill="none" stroke="#181818" strokeWidth="9"/>
+                  <circle cx={CX} cy={CY} r={R} fill="none" stroke="var(--color-border)" strokeWidth="9"/>
                   <circle cx={CX} cy={CY} r={R} fill="none" stroke={phaseColor} strokeWidth="9"
                     strokeDasharray={circ} strokeDashoffset={circ*(1-progress)}
                     strokeLinecap="round" transform={`rotate(-90 ${CX} ${CY})`}
@@ -192,7 +203,7 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
               </div>
             )}
 
-            <div className="font-mono text-[9px] text-[#3a3a3a] tracking-[1px] mt-3 text-center">{infoItems}</div>
+            <div className="font-mono text-[9px] tracking-[1px] mt-3 text-center" style={{ color: 'var(--color-dim)' }}>{infoItems}</div>
 
             {phase==="done" && !logPerSet ? (
               <div className="flex flex-col gap-2.5 w-[220px] mt-5">
@@ -231,7 +242,7 @@ export default function SetTimer({ config, onClose, onLog, grades, gym }) {
 
           {/* Done summary */}
           {logPerSet && phase==="done" && (
-            <div className="bg-[#0c0c0c] border-t border-border px-5 pt-4 pb-5 overflow-y-auto max-h-[45vh]">
+            <div className="border-t border-border px-5 pt-4 pb-5 overflow-y-auto max-h-[45vh]" style={{ background: 'var(--color-surface)' }}>
               <div className="font-mono text-[10px] text-muted tracking-[2px] mb-3">SESSION SUMMARY</div>
               <SetSummaryGrid
                 setLogs={Object.entries(setLogs).reduce((acc,[k,v])=>({...acc,[k]:v}),{})}

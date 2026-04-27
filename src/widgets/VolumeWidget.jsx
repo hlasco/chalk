@@ -116,7 +116,7 @@ export default function VolumeWidget({ allSessions, period, agg }) {
       </div>
 
       <ResponsiveContainer width="100%" height={100}>
-        <AreaChart data={data} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 10, right: 22, left: -4, bottom: 0 }}>
           <defs>
             <linearGradient id={GRAD_SENDS} x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%"  stopColor={COLOR_SENDS} stopOpacity={0.22} />
@@ -139,7 +139,7 @@ export default function VolumeWidget({ allSessions, period, agg }) {
           <YAxis
             tickCount={4}
             tick={{ fontSize: 8, fill: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}
-            axisLine={false} tickLine={false} width={24}
+            axisLine={false} tickLine={false} width={22}
           />
           <Tooltip
             content={
